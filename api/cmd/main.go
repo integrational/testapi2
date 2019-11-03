@@ -14,12 +14,13 @@ func main() {
 		port = "8080"
 	}
 
+	impl := impl.New()
 	echo := echo.New()
 
 	echo.Use(middleware.Logger())
 	echo.Use(middleware.Recover())
 
-	gen.RegisterHandlers(echo, impl.New())
+	gen.RegisterHandlers(echo, impl)
 
 	echo.Logger.Fatal(echo.Start(":" + port))
 }

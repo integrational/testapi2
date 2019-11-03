@@ -5,8 +5,16 @@ echo "findPets:"
 curl -i http://localhost:$PORT/pets
 
 echo
-echo "findPets with query params:"
+echo "findPets with query params (limit=1, cat, dog):"
 curl -i http://localhost:$PORT/pets?limit=1\&tags=cat\&tags=dog
+
+echo
+echo "findPets with query params (cat):"
+curl -i http://localhost:$PORT/pets?tags=cat
+
+echo
+echo "findPets with query params (dog):"
+curl -i http://localhost:$PORT/pets?tags=dog
 
 echo
 echo "addPet:"

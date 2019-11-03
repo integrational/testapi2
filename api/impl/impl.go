@@ -3,43 +3,52 @@ package impl
 import (
 	"github.com/integrational/apitests/testapi2/api/gen"
 	"github.com/labstack/echo/v4"
-	"log"
 )
 
 type APIImpl struct {
-	pets map[int64]gen.Pet
+	svc *Petstore
 }
 
 func New() *APIImpl {
-	pets := make(map[int64]gen.Pet)
-	return &APIImpl{pets: pets}
+	return &APIImpl{NewPetstore()}
 }
 
 func (impl *APIImpl) FindPets(ctx echo.Context, params gen.FindPetsParams) error {
-	defer un(trace("FindPets"))
-	return ctx.JSON(200, nil)
+	defer un(trace("APIImpl.FindPets"))
+	if pets, err := impl.svc.FindPets(params); err != nil {
+		return err
+	} else {
+		return ctx.JSON(200, pets)
+	}
 }
 
-func (impl *APIImpl) AddPet(ctx echo.Context) error {
-	defer un(trace("AddPet"))
-	return ctx.JSON(200, nil)
-}
-
-func (impl *APIImpl) DeletePet(ctx echo.Context, id int64) error {
-	defer un(trace("DeletePet"))
-	return ctx.JSON(200, nil)
+func (impl *APIImpl) AddPet(ctx echo.Context) (err error) {
+	defer un(trace("APIImpl.AddPet"))
+	newPet := gen.NewPet{}
+	if err = ctx.Bind(&newPet); err != nil {
+		return err
+	}
+	if pet, err := impl.svc.AddPet(&newPet); err != nil {
+		return err
+	} else {
+		return ctx.JSON(200, pet)
+	}
 }
 
 func (impl *APIImpl) FindPetById(ctx echo.Context, id int64) error {
-	defer un(trace("FindPetById"))
-	return ctx.JSON(200, nil)
+	defer un(trace("APIImpl.FindPetById"))
+	if pet, err := impl.svc.FindPetById(id); err != nil {
+		return err
+	} else {
+		return ctx.JSON(200, pet)
+	}
 }
 
-func trace(s string) string {
-	log.Println("=>", s)
-	return s
-}
-
-func un(s string) {
-	log.Println("<=", s)
+func (impl *APIImpl) DeletePet(ctx echo.Context, id int64) error {
+	defer un(trace("APIImpl.DeletePet"))
+	if err := impl.svc.DeletePet(id); err != nil {
+		return err
+	} else {
+		return ctx.NoContent(204)
+	}
 }
