@@ -1,8 +1,8 @@
 OASDEFURL=https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml
-OASDEF=oasdef.yaml
 BASEPATH=api
 GENPACK=gen
 GENPATH=$BASEPATH/$GENPACK
+OASDEF=$BASEPATH/oasdef.yaml
 
 curl -o $OASDEF $OASDEFURL
 
