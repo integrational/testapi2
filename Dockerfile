@@ -6,7 +6,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app/
 COPY . .
 # cross-compile statically linked 64bit Linux binary called main
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o main api/cmd/*
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o main main.go
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

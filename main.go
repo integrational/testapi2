@@ -5,6 +5,7 @@ import (
 	"github.com/integrational/apitests/testapi2/api/impl"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"log"
 	"os"
 )
 
@@ -17,7 +18,10 @@ func main() {
 	impl := impl.New()
 	echo := echo.New()
 
-	echo.Use(middleware.Logger())
+	echo.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "${remote_ip} ${method} ${uri} ${status}\n",
+		Output: log.Writer(),
+	}))
 	echo.Use(middleware.Recover())
 
 	gen.RegisterHandlers(echo, impl)

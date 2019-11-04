@@ -40,6 +40,9 @@ func (impl *APIImpl) FindPetById(ctx echo.Context, id int64) error {
 	if pet, err := impl.svc.FindPetById(id); err != nil {
 		return err
 	} else {
+		if pet == nil {
+			return ctx.NoContent(404)
+		}
 		return ctx.JSON(200, pet)
 	}
 }

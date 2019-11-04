@@ -1,15 +1,18 @@
 package impl
 
 import (
-	"errors"
 	"github.com/integrational/apitests/testapi2/api/gen"
 	"log"
-	"math"
 	"sort"
+	"sync"
+)
+
+const (
+	maxNumResults = 100
 )
 
 type Petstore struct {
-	// FIXME mutex
+	mutex    sync.Mutex
 	petsById map[int64]gen.Pet
 	nextId   int64
 }
@@ -22,7 +25,16 @@ func NewPetstore() *Petstore {
 		2: {Id: 2, NewPet: gen.NewPet{"Moritz", &cat}},
 		3: {Id: 3, NewPet: gen.NewPet{"Muppi", &dog}},
 	}
-	return &Petstore{petsById, 4}
+	return &Petstore{petsById: petsById, nextId: 4}
+}
+
+func (svc *Petstore) lock() *Petstore {
+	svc.mutex.Lock()
+	return svc
+}
+
+func (svc *Petstore) unlock() {
+	svc.mutex.Unlock()
 }
 
 func (svc *Petstore) FindPets(params gen.FindPetsParams) (pets []gen.Pet, err error) {
@@ -32,7 +44,7 @@ func (svc *Petstore) FindPets(params gen.FindPetsParams) (pets []gen.Pet, err er
 	limit := limit(params)
 	log.Println("Filtering by: tags", tags, ", limit", limit)
 
-	pets = make([]gen.Pet, 0, len(svc.petsById)) // FIXME can get too large
+	pets = make([]gen.Pet, 0, maxNumResults)
 	for _, pet := range svc.petsById {
 		if matchesAnyTag(pet, tags) {
 			pets = append(pets, pet)
@@ -46,7 +58,7 @@ func (svc *Petstore) FindPets(params gen.FindPetsParams) (pets []gen.Pet, err er
 
 func limit(params gen.FindPetsParams) int {
 	if params.Limit == nil {
-		return math.MaxInt32
+		return maxNumResults // math.MaxInt32
 	}
 	return int(*params.Limit)
 }
@@ -75,6 +87,8 @@ func matchesAnyTag(pet gen.Pet, tags sort.StringSlice) bool {
 
 func (svc *Petstore) AddPet(newPet *gen.NewPet) (pet *gen.Pet, err error) {
 	defer un(trace("Petstore.AddPet"))
+	defer svc.lock().unlock()
+
 	id := svc.nextId
 	svc.nextId++
 	pet = &gen.Pet{Id: id, NewPet: *newPet}
@@ -87,12 +101,14 @@ func (svc *Petstore) FindPetById(id int64) (*gen.Pet, error) {
 	if pet, ok := svc.petsById[id]; ok {
 		return &pet, nil
 	} else {
-		return nil, errors.New("no such ID") // FIXME
+		return nil, nil // not reasonable to return error if no matching pet
 	}
 }
 
 func (svc *Petstore) DeletePet(id int64) error {
 	defer un(trace("Petstore.DeletePet"))
+	defer svc.lock().unlock()
+
 	delete(svc.petsById, id)
 	return nil
 }
